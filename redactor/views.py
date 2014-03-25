@@ -22,10 +22,13 @@ def redactor_upload(request, upload_to=None, form_class=ImageForm,
     form = form_class(request.POST, request.FILES)
     if form.is_valid():
         file_ = form.cleaned_data['file']
-        filename = "%s.%s" % (uuid.uuid4(), file_.name.split('.')[-1])
-        path = os.path.join(upload_to or UPLOAD_PATH, filename)
+        path = os.path.join(upload_to or UPLOAD_PATH, file_.name)
+        count = 1
+        while os.path.exists(path):
+            fpath, ext = os.path.splitext(path)
+            path = '%s_%d%s' % (fpath, count, ext)
         real_path = default_storage.save(path, file_)
         return HttpResponse(
-            response(filename, default_storage.url(real_path))
+            response(os.path.split(path)[-1], default_storage.url(real_path))
         )
     return HttpResponse(status=403)
